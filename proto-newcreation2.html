@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suno — Video to Song</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#0E0C0B;
+  display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+}
+.scale-root{transform-origin:center center}
+.phone{
+  width:300px;height:620px;
+  background:#141110;
+  border-radius:44px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.6),0 40px 80px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative;display:flex;flex-direction:column;
+}
+.dynamic-island{
+  width:80px;height:26px;background:#000;border-radius:20px;
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:20;
+}
+
+/* ── STATUS BAR ── */
+.status{
+  height:48px;padding:14px 18px 0;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:10;
+}
+.status-time{font-size:15px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.status-icons{display:flex;align-items:center;gap:5px}
+
+/* ── NAVBAR ── */
+.navbar{
+  height:48px;padding:0 14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.back-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.nav-center{text-align:center}
+.nav-title{font-size:16px;font-weight:600;color:#fff;letter-spacing:-0.2px}
+.nav-subtitle{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px}
+.model-pill{
+  background:rgba(255,255,255,0.1);border-radius:100px;
+  padding:5px 10px;color:#fff;font-size:11px;font-weight:500;
+}
+
+/* ── SCREENS (slide left/right) ── */
+.screens{flex:1;overflow:hidden;position:relative}
+.screens-track{
+  display:flex;height:100%;
+  transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.screen{width:300px;flex-shrink:0;height:100%;overflow:hidden}
+
+/* ────────────────────────────
+   SCREEN 1 — Creation with video option
+──────────────────────────── */
+.s1-content{padding:0 14px;display:flex;flex-direction:column;gap:10px}
+
+.upload-row{display:flex;gap:8px}
+.upload-btn{
+  flex:1;height:42px;border-radius:14px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;
+}
+.upload-btn.video-btn{
+  background:rgba(232,105,58,0.12);
+  border:1px solid rgba(232,105,58,0.35);
+  color:#E8A882;
+  position:relative;overflow:hidden;
+}
+.upload-btn.video-btn::after{
+  content:'NEW';position:absolute;top:6px;right:6px;
+  font-size:8px;font-weight:700;letter-spacing:0.08em;
+  color:#E8693A;
+}
+.song-card{
+  background:#1E1B1A;border-radius:18px;padding:14px;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+.card-title{font-size:14px;font-weight:600;color:#fff}
+.dice-btn{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.text-area-blank{
+  min-height:155px;position:relative;
+  display:flex;align-items:flex-start;padding-bottom:12px;
+}
+.placeholder-text{
+  color:rgba(255,255,255,0.28);font-size:14px;line-height:1.5;
+}
+.tags-row{display:flex;align-items:center;gap:6px;overflow:hidden;padding-top:4px}
+.tag-refresh{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.tag{
+  padding:5px 11px;border-radius:100px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.08);
+  color:rgba(255,255,255,0.75);font-size:12px;white-space:nowrap;
+}
+.card-divider{height:1px;background:rgba(255,255,255,0.07);margin:12px 0}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.toggle-pill{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.75);font-size:12px;
+}
+.check-circle{
+  width:16px;height:16px;border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#fff;
+}
+.lyrics-btn{color:rgba(255,255,255,0.6);font-size:13px}
+
+/* ────────────────────────────
+   SCREEN 2 — Analyzing
+──────────────────────────── */
+.s2{
+  background:#141110;padding:14px;
+  display:flex;flex-direction:column;gap:12px;height:100%;
+}
+.video-preview{
+  width:100%;height:200px;border-radius:16px;
+  overflow:hidden;position:relative;flex-shrink:0;
+}
+.video-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.video-preview-fallback{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#5A7A5A,#8BAD6E,#D4A55A);
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;
+}
+.video-overlay{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.45);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+}
+.analyzing-label{
+  font-size:12px;font-weight:600;color:#fff;letter-spacing:0.08em;text-transform:uppercase;
+}
+.progress-bar-wrap{
+  width:160px;height:4px;background:rgba(255,255,255,0.2);border-radius:4px;overflow:hidden;
+}
+.progress-bar{
+  height:100%;border-radius:4px;background:#E8693A;
+  width:0%;transition:width 0.1s linear;
+}
+.scan-lines{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.scan-line{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(232,105,58,0.5),transparent);
+  animation:scanDown 1.8s ease-in-out infinite;
+}
+@keyframes scanDown{
+  0%{top:-2px;opacity:0}
+  15%{opacity:1}
+  85%{opacity:1}
+  100%{top:100%;opacity:0}
+}
+.detecting-tags{
+  display:flex;flex-direction:column;gap:8px;
+}
+.detect-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.04);border-radius:12px;
+  padding:10px 12px;border:1px solid rgba(255,255,255,0.06);
+}
+.detect-icon{
+  width:28px;height:28px;border-radius:8px;
+  background:rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
+.detect-info{flex:1}
+.detect-label{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
+.detect-value{
+  font-size:13px;font-weight:600;color:rgba(255,255,255,0.3);
+  display:flex;align-items:center;gap:6px;
+}
+.detect-value.revealed{color:#fff;transition:color 0.4s ease}
+.detect-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,0.15);flex-shrink:0;
+}
+.detect-dot.active{background:#E8693A;box-shadow:0 0 6px rgba(232,105,58,0.6)}
+
+/* ────────────────────────────
+   SCREEN 3 — Results
+──────────────────────────── */
+.s3{
+  background:#141110;padding:14px;
+  display:flex;flex-direction:column;gap:10px;height:100%;
+}
+.result-video-thumb{
+  width:100%;height:130px;border-radius:14px;overflow:hidden;
+  position:relative;flex-shrink:0;
+}
+.result-video-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.result-video-thumb-fallback{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#5A7A5A,#8BAD6E,#D4A55A);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+}
+.result-badge{
+  position:absolute;top:10px;left:10px;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);
+  border-radius:100px;padding:4px 10px;
+  font-size:10px;font-weight:600;color:#E8A882;letter-spacing:0.06em;
+  border:1px solid rgba(232,105,58,0.3);
+  display:flex;align-items:center;gap:5px;
+}
+.result-badge::before{
+  content:'';width:5px;height:5px;border-radius:50%;background:#E8693A;
+  box-shadow:0 0 6px rgba(232,105,58,0.8);
+}
+.result-card{
+  background:#1E1B1A;border-radius:18px;padding:16px;
+  border:1px solid rgba(255,255,255,0.06);flex:1;display:flex;flex-direction:column;
+}
+.result-header{margin-bottom:14px}
+.result-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.result-sub{font-size:12px;color:rgba(255,255,255,0.4)}
+.result-tags-label{
+  font-size:10px;color:rgba(255,255,255,0.3);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;
+}
+.result-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.result-tag{
+  padding:5px 12px;border-radius:100px;
+  font-size:12px;font-weight:500;
+}
+.result-tag.mood{background:rgba(107,175,107,0.15);border:1px solid rgba(107,175,107,0.35);color:#8FD48F}
+.result-tag.genre{background:rgba(107,140,212,0.15);border:1px solid rgba(107,140,212,0.35);color:#9BB4F0}
+.result-tag.feel{background:rgba(232,105,58,0.15);border:1px solid rgba(232,105,58,0.35);color:#E8A882}
+.desc-label{
+  font-size:10px;color:rgba(255,255,255,0.3);
+  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;
+}
+.desc-text{
+  font-size:12.5px;line-height:1.6;color:rgba(255,255,255,0.55);
+  margin-bottom:16px;flex:1;
+}
+.result-cta{
+  width:100%;height:44px;border-radius:12px;
+  background:#E8693A;border:none;
+  font-size:14px;font-weight:700;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;
+}
+
+
+/* ── EDITABLE DESCRIPTION ── */
+.desc-edit-hint{
+  color:rgba(255,255,255,0.2);font-size:9px;
+  letter-spacing:0.04em;font-weight:400;text-transform:none;
+}
+.desc-textarea{
+  width:100%;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+  padding:10px 12px;
+  font-size:12px;line-height:1.6;color:rgba(255,255,255,0.75);
+  font-family:-apple-system,sans-serif;
+  resize:none;outline:none;margin-bottom:10px;
+  min-height:72px;
+}
+.desc-textarea:focus{border-color:rgba(232,105,58,0.5);color:#fff;}
+
+/* ── VIDEO CHECKBOX ── */
+.video-checkbox-row{
+  display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:12px;cursor:pointer;
+}
+.video-checkbox{
+  width:18px;height:18px;border-radius:5px;flex-shrink:0;margin-top:1px;
+  background:#E8693A;border:1.5px solid #E8693A;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.15s,border-color 0.15s;
+}
+.video-checkbox-label{
+  font-size:12px;line-height:1.55;color:rgba(255,255,255,0.65);
+}
+
+/* ── OVERLAY + ANNOTATION ── */
+.screen-overlay{
+  position:absolute;inset:0;z-index:40;
+  background:rgba(0,0,0,0);
+  pointer-events:none;border-radius:44px;
+}
+.annotation{
+  position:absolute;left:14px;right:14px;bottom:70px;
+  z-index:50;opacity:0;
+  background:rgba(232,105,58,0.2);
+  border:1.5px solid rgba(232,105,58,0.9);
+  border-radius:14px;padding:12px 14px;
+  font-size:12.5px;line-height:1.5;color:#FFB580;
+  text-align:center;font-weight:600;
+  box-shadow:0 0 28px rgba(232,105,58,0.2);
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+<div class="scale-root">
+<div class="phone">
+  <div class="dynamic-island"></div>
+
+  <!-- STATUS -->
+  <div class="status">
+    <div class="status-time">1:52</div>
+    <div style="width:80px"></div>
+    <div class="status-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white" opacity="0.9"><rect x="0" y="4" width="3" height="8" rx="0.5"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="0.5"/><rect x="9" y="0" width="3" height="12" rx="0.5"/><rect x="13.5" y="-1" width="2.5" height="13" rx="0.5" opacity="0.3"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="white" opacity="0.9"><path d="M8 2C10.8 2 13.3 3.1 15.1 5L14.1 6C12.5 4.4 10.4 3.4 8 3.4S3.5 4.4 1.9 6L.9 5C2.7 3.1 5.2 2 8 2z"/><path d="M8 5C9.9 5 11.6 5.8 12.9 7.1L11.9 8.1C10.8 7 9.5 6.4 8 6.4S5.2 7 4.1 8.1L3.1 7.1C4.4 5.8 6.1 5 8 5z"/><circle cx="8" cy="11" r="1.5"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="white" stroke-opacity="0.35"/><rect x="2" y="2" width="16" height="9" rx="2" fill="white"/><path d="M24 4.5v4a2 2 0 000-4z" fill="white" fill-opacity="0.4"/></svg>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="back-btn">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><path d="M6 1L6 11M1 6l5 5 5-5"/></svg>
+    </div>
+    <div class="nav-center">
+      <div class="nav-title">Simple ▾</div>
+      <div class="nav-subtitle">50 credits</div>
+    </div>
+    <div class="model-pill">v4.5-all ▾</div>
+  </div>
+
+  <!-- SCREENS -->
+  <div class="screens">
+    <div class="screens-track" id="track">
+
+      <!-- SCREEN 1: Creation with video upload -->
+      <div class="screen">
+        <div class="s1-content" style="padding-top:8px">
+          <div class="upload-row">
+            <div class="upload-btn">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 1v12M1 7h12"/></svg>
+              Audio
+            </div>
+            <div class="upload-btn video-btn" id="videoBtn">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#E8A882" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="9" height="8" rx="1.5"/><path d="M10 5.5l3-2v7l-3-2"/></svg>
+              Video
+            </div>
+          </div>
+          <div class="song-card">
+            <div class="card-header">
+              <div class="card-title">Song Description</div>
+              <div class="dice-btn">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="13" height="13" rx="2.5" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/><circle cx="4.5" cy="4.5" r="1.1" fill="rgba(255,255,255,0.7)"/><circle cx="10.5" cy="4.5" r="1.1" fill="rgba(255,255,255,0.7)"/><circle cx="7.5" cy="7.5" r="1.1" fill="rgba(255,255,255,0.7)"/><circle cx="4.5" cy="10.5" r="1.1" fill="rgba(255,255,255,0.7)"/><circle cx="10.5" cy="10.5" r="1.1" fill="rgba(255,255,255,0.7)"/></svg>
+              </div>
+            </div>
+            <div class="text-area-blank">
+              <div class="placeholder-text">A heavy metal song about dinosaurs ruling again</div>
+            </div>
+            <div class="tags-row">
+              <div class="tag-refresh"><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.3" stroke-linecap="round"><path d="M2 6.5A4.5 4.5 0 0111 4M11 6.5A4.5 4.5 0 012 9"/><path d="M9.5 2.5L11 4l-1.5 1.5M3.5 10.5L2 9l1.5-1.5"/></svg></div>
+              <div class="tag">dreamy</div>
+              <div class="tag">gospel</div>
+              <div class="tag">cinematic</div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="card-footer">
+              <div class="toggle-pill"><div class="check-circle">✓</div>Instrumental</div>
+              <div class="lyrics-btn">+ Lyrics</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: Analyzing -->
+      <div class="screen">
+        <div class="s2">
+          <div class="video-preview">
+            <img src="videothumbnail.png" alt="Uploaded video" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="video-preview-fallback" style="display:none">🌅</div>
+            <div class="video-overlay">
+              <div class="analyzing-label" id="analyzeLabel">Analyzing your video…</div>
+              <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+            </div>
+            <div class="scan-lines"><div class="scan-line"></div></div>
+          </div>
+          <div class="detecting-tags">
+            <div class="detect-row">
+              <div class="detect-icon">🎭</div>
+              <div class="detect-info">
+                <div class="detect-label">Mood</div>
+                <div class="detect-value" id="detectMood"><div class="detect-dot" id="dotMood"></div><span id="moodVal">—</span></div>
+              </div>
+            </div>
+            <div class="detect-row">
+              <div class="detect-icon">🎵</div>
+              <div class="detect-info">
+                <div class="detect-label">Genre</div>
+                <div class="detect-value" id="detectGenre"><div class="detect-dot" id="dotGenre"></div><span id="genreVal">—</span></div>
+              </div>
+            </div>
+            <div class="detect-row">
+              <div class="detect-icon">⚡</div>
+              <div class="detect-info">
+                <div class="detect-label">Energy</div>
+                <div class="detect-value" id="detectEnergy"><div class="detect-dot" id="dotEnergy"></div><span id="energyVal">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: Results -->
+      <div class="screen">
+        <div class="s3">
+          <div class="result-video-thumb">
+            <img src="videothumbnail.png" alt="Your video" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="result-video-thumb-fallback" style="display:none">🥧</div>
+            <div class="result-badge">Analyzed</div>
+          </div>
+          <div class="result-card">
+            <div class="result-tags-label">Detected vibe</div>
+            <div class="result-tags">
+              <div class="result-tag mood">cozy</div>
+              <div class="result-tag mood">nostalgic</div>
+              <div class="result-tag genre">folk</div>
+              <div class="result-tag genre">acoustic</div>
+              <div class="result-tag feel">warm</div>
+              <div class="result-tag feel">intimate</div>
+            </div>
+            <div class="desc-label">
+              Song description
+              <span class="desc-edit-hint">— edit before creating</span>
+            </div>
+            <textarea class="desc-textarea" id="songDesc">A warm, fingerpicked folk song with a cozy, homemade feel — like Sunday afternoon in a kitchen that smells like pie.</textarea>
+            <label class="video-checkbox-row">
+              <div class="video-checkbox" id="videoCheck">
+                <svg id="checkMark" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="video-checkbox-label">Include your video? Song will loop as the soundtrack.</span>
+            </label>
+            <button class="result-cta">
+              Create
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- OVERLAY + ANNOTATION -->
+  <div class="screen-overlay" id="overlay"></div>
+  <div class="annotation" id="annot"></div>
+
+</div>
+</div>
+
+<script>
+function scaleToFit(){
+  const s = Math.min(window.innerWidth/300, window.innerHeight/620) * 0.92;
+  document.querySelector('.scale-root').style.transform = `scale(${s})`;
+}
+scaleToFit();
+window.addEventListener('resize', scaleToFit);
+
+const track   = document.getElementById('track');
+const overlay = document.getElementById('overlay');
+const annot   = document.getElementById('annot');
+
+function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function goToScreen(i){
+  track.style.transform = `translateX(-${i * 300}px)`;
+}
+
+function showAnnot(msg){
+  overlay.style.transition = 'background 0.4s ease';
+  overlay.style.background = 'rgba(0,0,0,0.65)';
+  annot.textContent = msg;
+  annot.style.transition = 'opacity 0.4s ease';
+  annot.style.opacity = '1';
+}
+function hideAnnot(){
+  return new Promise(r => {
+    overlay.style.transition = 'background 0.4s ease';
+    overlay.style.background = 'rgba(0,0,0,0)';
+    annot.style.transition = 'opacity 0.4s ease';
+    annot.style.opacity = '0';
+    setTimeout(r, 460);
+  });
+}
+
+// Pulse the video button
+function pulseVideoBtn(){
+  const btn = document.getElementById('videoBtn');
+  btn.style.transition = 'transform 0.15s ease, background 0.15s';
+  btn.style.transform = 'scale(0.92)';
+  btn.style.background = 'rgba(232,105,58,0.25)';
+  setTimeout(() => {
+    btn.style.transform = '';
+    btn.style.background = '';
+  }, 220);
+}
+
+// Animate progress bar and reveal tags sequentially
+async function runAnalysis(){
+  const bar = document.getElementById('progressBar');
+  const label = document.getElementById('analyzeLabel');
+
+  // Reset
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  ['Mood','Genre','Energy'].forEach(k => {
+    document.getElementById(`detect${k}`).classList.remove('revealed');
+    document.getElementById(`dot${k}`).classList.remove('active');
+    document.getElementById(`${k.toLowerCase()}Val`).textContent = '—';
+  });
+  void bar.offsetWidth;
+
+  // Grow bar
+  bar.style.transition = 'width 2.8s ease-in-out';
+  bar.style.width = '100%';
+
+  // Reveal mood at 30%
+  await delay(900);
+  document.getElementById('dotMood').classList.add('active');
+  document.getElementById('moodVal').textContent = 'cozy · nostalgic';
+  document.getElementById('detectMood').classList.add('revealed');
+
+  // Reveal genre at 60%
+  await delay(900);
+  document.getElementById('dotGenre').classList.add('active');
+  document.getElementById('genreVal').textContent = 'folk · acoustic';
+  document.getElementById('detectGenre').classList.add('revealed');
+
+  // Reveal energy at 90%
+  await delay(900);
+  document.getElementById('dotEnergy').classList.add('active');
+  document.getElementById('energyVal').textContent = 'warm · intimate';
+  document.getElementById('detectEnergy').classList.add('revealed');
+
+  label.textContent = 'Analysis complete ✓';
+  await delay(600);
+}
+
+async function resetAll(){
+  track.style.transition = 'none';
+  goToScreen(0);
+  overlay.style.transition = 'none';
+  overlay.style.background = 'rgba(0,0,0,0)';
+  annot.style.transition = 'none';
+  annot.style.opacity = '0';
+  document.getElementById('analyzeLabel').textContent = 'Analyzing your video…';
+  void overlay.offsetWidth;
+}
+
+async function runLoop(){
+  await resetAll();
+  track.style.transition = 'transform 0.5s cubic-bezier(0.4,0,0.2,1)';
+
+  // ── Screen 1: creation screen ──
+  await delay(1800);
+
+  // Tap video button
+  pulseVideoBtn();
+  await delay(500);
+
+  // ── Screen 2: analyzing ──
+  goToScreen(1);
+  await delay(400);
+  await runAnalysis();
+  await delay(400);
+
+  // ── Screen 3: results ──
+  goToScreen(2);
+  await delay(900);
+
+  // Annotation
+  // Annotation 1
+  showAnnot("Suno reads my video’s mood — no prompt needed.");
+  await delay(2600);
+  await hideAnnot();
+  await delay(500);
+
+  // Annotation 2
+  showAnnot("I now have a personal starting point I can react to and edit from.");
+  await delay(2800);
+  await hideAnnot();
+
+  await delay(700);
+  runLoop();
+}
+
+setTimeout(runLoop, 600);
+</script>
+</body>
+</html>

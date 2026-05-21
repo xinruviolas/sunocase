@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suno — Creator Analytics</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#0E0C0B;
+  display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+}
+.scale-root{transform-origin:center center}
+.phone{
+  width:300px;height:620px;
+  border-radius:44px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.6),0 40px 80px rgba(0,0,0,0.7);
+  position:relative;background:#0D0B10;
+}
+.dynamic-island{
+  width:80px;height:26px;background:#000;border-radius:20px;
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:30;
+}
+
+/* ── TWO SCREENS SIDE BY SIDE, phone clips them ── */
+.screens-track{
+  position:absolute;inset:0;
+  display:flex;width:600px;
+  transition:transform 0.52s cubic-bezier(0.4,0,0.2,1);
+}
+.screen{width:300px;height:620px;flex-shrink:0;position:relative;overflow:hidden}
+
+/* ════════════ SCREEN 1 — PLAYER ════════════ */
+#s1{background:#0D0B10}
+.player-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 130% 90% at 50% 35%, #2A1B4A 0%, #1A0E30 45%, #0D0B10 100%);
+}
+.player-glow{
+  position:absolute;width:240px;height:240px;
+  top:36%;left:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse, rgba(120,80,200,0.22) 0%, transparent 70%);
+  pointer-events:none;
+}
+.status{
+  position:absolute;top:0;left:0;right:0;height:48px;
+  padding:14px 18px 0;
+  display:flex;align-items:center;justify-content:space-between;z-index:10;
+}
+.status-time{font-size:14px;font-weight:600;color:#fff;letter-spacing:-0.3px}
+.status-icons{display:flex;align-items:center;gap:5px}
+.back-btn{
+  position:absolute;top:54px;left:14px;z-index:10;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* art */
+.art-wrap{
+  position:absolute;
+  top:100px;left:50%;transform:translateX(-50%);
+  width:160px;height:160px;border-radius:20px;overflow:hidden;
+  box-shadow:0 12px 48px rgba(0,0,0,0.7);z-index:5;
+}
+.art-grad{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#3B1F6B 0%,#6B3FA0 40%,#9B6FDF 70%,#C4A0F0 100%);
+  display:flex;align-items:center;justify-content:center;font-size:52px;
+}
+
+/* view count — prominent, below art */
+
+
+/* song info */
+.song-info{
+  position:absolute;bottom:154px;left:14px;right:58px;z-index:5;
+}
+.song-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:5px}
+.artist-row{display:flex;align-items:center;gap:7px}
+.artist-avatar{
+  width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg,#9B6FDF,#E8693A);flex-shrink:0;
+}
+.artist-name{font-size:13px;color:rgba(255,255,255,0.75);font-weight:500}
+
+/* right icons — emoji style */
+.right-icons{
+  position:absolute;right:10px;bottom:148px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;z-index:5;
+}
+.r-btn{display:flex;flex-direction:column;align-items:center;gap:2px}
+.r-emoji{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;
+}
+.r-label{font-size:9px;color:rgba(255,255,255,0.55);letter-spacing:0.06em;text-transform:uppercase;font-weight:600}
+
+/* progress */
+.progress-section{
+  position:absolute;bottom:100px;left:14px;right:14px;z-index:5;
+}
+.progress-track{height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-bottom:6px;position:relative}
+.progress-fill{height:100%;width:7%;background:#fff;border-radius:2px;position:relative}
+.progress-fill::after{content:'';position:absolute;right:-4px;top:-3px;width:9px;height:9px;border-radius:50%;background:#fff}
+.progress-times{display:flex;justify-content:space-between}
+.progress-time{font-size:10px;color:rgba(255,255,255,0.4)}
+
+/* controls */
+.controls{
+  position:absolute;bottom:46px;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;gap:24px;z-index:5;
+}
+.ctrl-play{
+  width:52px;height:52px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* bottom row */
+.bottom-row{
+  position:absolute;bottom:10px;left:14px;right:14px;
+  display:flex;align-items:center;justify-content:space-between;z-index:5;
+}
+.see-more-btn{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;color:rgba(255,255,255,0.4);
+}
+.see-insights-btn{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(232,105,58,0.18);
+  border:1px solid rgba(232,105,58,0.5);
+  border-radius:100px;padding:5px 11px;
+  font-size:11px;font-weight:600;color:#E8A882;
+  cursor:pointer;transition:background 0.15s;
+}
+.see-insights-btn.tapped{background:rgba(232,105,58,0.35)}
+
+/* ════════════ SCREEN 2 — INSIGHTS ════════════ */
+#s2{background:#0D0B0D;overflow-y:auto}
+
+.ins-header{
+  position:sticky;top:0;z-index:10;
+  height:50px;padding:0 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:#0D0B0D;border-bottom:1px solid rgba(255,255,255,0.07);
+  flex-shrink:0;
+}
+.ins-back{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ins-title{font-size:15px;font-weight:700;color:#fff}
+.ins-actions{display:flex;gap:14px;color:rgba(255,255,255,0.4);font-size:16px}
+
+.ins-strip{
+  padding:12px 14px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.ins-thumb{
+  width:42px;height:42px;border-radius:10px;overflow:hidden;flex-shrink:0;
+}
+.ins-thumb-grad{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,#3B1F6B,#9B6FDF);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.ins-song-name{font-size:14px;font-weight:600;color:#fff}
+.ins-song-meta{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+
+/* reactions */
+.reactions-row{
+  display:flex;justify-content:space-around;
+  padding:14px 10px;border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.reaction{display:flex;flex-direction:column;align-items:center;gap:3px}
+.reaction-icon{
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,0.07);
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+}
+.reaction-count{font-size:13px;font-weight:700;color:#fff}
+.reaction-lbl{font-size:8.5px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em}
+
+/* tabs */
+.tab-bar{
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  padding:0 14px;
+}
+.tab{
+  display:inline-block;padding:11px 0;
+  font-size:13px;font-weight:700;color:#fff;
+  border-bottom:2px solid #fff;
+}
+
+/* stats */
+.section{padding:14px}
+.section-title{
+  font-size:13px;font-weight:700;color:#fff;
+  display:flex;align-items:center;gap:6px;margin-bottom:11px;
+}
+.iicon{
+  width:15px;height:15px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.28);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:rgba(255,255,255,0.45);flex-shrink:0;
+}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat-card{
+  background:#1A181D;border-radius:11px;
+  padding:12px 13px;border:1px solid rgba(255,255,255,0.06);
+}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:5px}
+.stat-val{font-size:22px;font-weight:700;color:#fff;line-height:1}
+.stat-sub{font-size:9.5px;color:rgba(255,255,255,0.28);margin-top:3px}
+
+/* graph */
+.graph-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+}
+.graph-title{font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px}
+.graph-total{font-size:13px;font-weight:700;color:#fff}
+.graph-card{
+  background:#1A181D;border-radius:11px;
+  padding:12px;border:1px solid rgba(255,255,255,0.06);
+}
+.graph-svg{width:100%;height:72px;display:block}
+.graph-dates{display:flex;justify-content:space-between;margin-top:6px}
+.graph-date{font-size:9.5px;color:rgba(255,255,255,0.28)}
+
+/* OVERLAY + ANNOTATION */
+.screen-overlay{
+  position:absolute;inset:0;z-index:40;
+  background:rgba(0,0,0,0);pointer-events:none;border-radius:44px;
+}
+.annotation{
+  position:absolute;left:14px;right:14px;bottom:68px;
+  z-index:50;opacity:0;
+  background:rgba(232,105,58,0.2);
+  border:1.5px solid rgba(232,105,58,0.9);
+  border-radius:14px;padding:12px 14px;
+  font-size:11.5px;line-height:1.55;color:#FFB580;
+  text-align:center;font-weight:600;
+  box-shadow:0 0 28px rgba(232,105,58,0.2);
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+<div class="scale-root">
+<div class="phone">
+  <div class="dynamic-island"></div>
+
+  <div class="screens-track" id="track">
+
+    <!-- ════ SCREEN 1: PLAYER ════ -->
+    <div class="screen" id="s1">
+      <div class="player-bg"></div>
+      <div class="player-glow"></div>
+
+      <div class="status">
+        <div class="status-time">8:25</div>
+        <div style="width:80px"></div>
+        <div class="status-icons">
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="white" opacity="0.9"><rect x="0" y="3" width="2.5" height="8" rx="0.4"/><rect x="4" y="2" width="2.5" height="9" rx="0.4"/><rect x="8" y="0" width="2.5" height="11" rx="0.4"/><rect x="12" y="-1" width="2.5" height="12" rx="0.4" opacity="0.3"/></svg>
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="white" opacity="0.9"><path d="M7.5 1.8C9.8 1.8 11.9 2.8 13.4 4.5L12.5 5.4C11.3 4 9.5 3.2 7.5 3.2S3.7 4 2.5 5.4L1.6 4.5C3.1 2.8 5.2 1.8 7.5 1.8z"/><path d="M7.5 4.8C9 4.8 10.3 5.5 11.2 6.6L10.3 7.5C9.7 6.7 8.7 6.2 7.5 6.2S5.3 6.7 4.7 7.5L3.8 6.6C4.7 5.5 6 4.8 7.5 4.8z"/><circle cx="7.5" cy="10" r="1.4"/></svg>
+          <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3.5" stroke="white" stroke-opacity="0.35"/><rect x="2" y="2" width="14" height="8" rx="2" fill="white"/><path d="M22 4v4a2 2 0 000-4z" fill="white" fill-opacity="0.4"/></svg>
+        </div>
+      </div>
+
+      <div class="back-btn">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2L3 5.5l5 3.5"/></svg>
+      </div>
+
+      <!-- Album art -->
+      <div class="art-wrap">
+        <div class="art-grad">🎻</div>
+      </div>
+
+      <!-- Right icons (emoji) -->
+      <div class="right-icons">
+        <div class="r-btn">
+          <div class="r-emoji" style="font-size:13px;background:rgba(255,255,255,0.07);flex-direction:column;gap:1px;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;">👁<span style="font-size:9px;color:rgba(255,255,255,0.7);font-weight:600;font-style:normal;">53</span></div>
+          <div class="r-label">Listens</div>
+        </div>
+        <div class="r-btn">
+          <div class="r-emoji">🔄</div>
+          <div class="r-label">Remix</div>
+        </div>
+        <div class="r-btn">
+          <div class="r-emoji">👍</div>
+          <div class="r-label">0</div>
+        </div>
+        <div class="r-btn">
+          <div class="r-emoji">👎</div>
+          <div class="r-label">0</div>
+        </div>
+        <div class="r-btn">
+          <div class="r-emoji">💬</div>
+          <div class="r-label">0</div>
+        </div>
+        <div class="r-btn">
+          <div class="r-emoji">📤</div>
+          <div class="r-label">Share</div>
+        </div>
+      </div>
+
+      <!-- Song info -->
+      <div class="song-info">
+        <div class="song-title">Moldau</div>
+        <div class="artist-row">
+          <div class="artist-avatar"></div>
+          <div class="artist-name">xinru</div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="progress-section">
+        <div class="progress-track"><div class="progress-fill"></div></div>
+        <div class="progress-times">
+          <span class="progress-time">00:09</span>
+          <span class="progress-time">02:45</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="rgba(255,255,255,0.75)"><path d="M22 6L8 14l14 8V6z"/><rect x="5" y="6" width="3" height="16" rx="1.2"/></svg>
+        <div class="ctrl-play">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="4" height="14" rx="1.5" fill="#0D0B10"/><rect x="12" y="3" width="4" height="14" rx="1.5" fill="#0D0B10"/></svg>
+        </div>
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="rgba(255,255,255,0.75)" style="transform:scaleX(-1)"><path d="M22 6L8 14l14 8V6z"/><rect x="5" y="6" width="3" height="16" rx="1.2"/></svg>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="bottom-row">
+        <div class="see-more-btn">
+          <svg width="10" height="7" viewBox="0 0 10 7" fill="none"><path d="M1 5.5l4-4 4 4" stroke="rgba(255,255,255,0.4)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          See More
+        </div>
+        <div class="see-insights-btn" id="insightsBtn">
+          See insights ›
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SCREEN 2: INSIGHTS ════ -->
+    <div class="screen" id="s2">
+
+      <div class="ins-header">
+        <div class="ins-back" id="insBack">
+          <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M7 1.5L2 7.5l5 6" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ins-title">Song insights</div>
+        <div class="ins-actions">
+          <span>📈</span>
+          <span>···</span>
+        </div>
+      </div>
+
+      <!-- Song strip -->
+      <div class="ins-strip">
+        <div class="ins-thumb"><div class="ins-thumb-grad">🎻</div></div>
+        <div>
+          <div class="ins-song-name">Moldau</div>
+          <div class="ins-song-meta">xinru · Classical · No lyrics</div>
+        </div>
+      </div>
+
+      <!-- Reactions -->
+      <div class="reactions-row">
+        <div class="reaction">
+          <div class="reaction-icon">👍</div>
+          <div class="reaction-count">0</div>
+          <div class="reaction-lbl">Likes</div>
+        </div>
+        <div class="reaction">
+          <div class="reaction-icon">👎</div>
+          <div class="reaction-count">0</div>
+          <div class="reaction-lbl">Dislikes</div>
+        </div>
+        <div class="reaction">
+          <div class="reaction-icon">💬</div>
+          <div class="reaction-count">0</div>
+          <div class="reaction-lbl">Comments</div>
+        </div>
+        <div class="reaction">
+          <div class="reaction-icon">📤</div>
+          <div class="reaction-count">0</div>
+          <div class="reaction-lbl">Shares</div>
+        </div>
+        <div class="reaction">
+          <div class="reaction-icon">🔄</div>
+          <div class="reaction-count">0</div>
+          <div class="reaction-lbl">Remixes</div>
+        </div>
+      </div>
+
+      <!-- Tab -->
+      <div class="tab-bar"><div class="tab">Overview</div></div>
+
+      <!-- Stats -->
+      <div class="section">
+        <div class="section-title">Summary <div class="iicon">i</div></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-lbl">Listens</div>
+            <div class="stat-val">53</div>
+            <div class="stat-sub">last 30 days</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Accounts reached</div>
+            <div class="stat-val">39</div>
+            <div class="stat-sub">unique listeners</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Avg. listen time</div>
+            <div class="stat-val">31s</div>
+            <div class="stat-sub">of 2:45 total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Follows</div>
+            <div class="stat-val">0</div>
+            <div class="stat-sub">from this song</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graph -->
+      <div class="section" style="padding-top:0">
+        <div class="graph-header">
+          <div class="graph-title">Listens <div class="iicon">i</div></div>
+          <div class="graph-total">53</div>
+        </div>
+        <div class="graph-card">
+          <svg class="graph-svg" viewBox="0 0 220 72" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="gFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#9B6FDF" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#9B6FDF" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="18" x2="220" y2="18" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="36" x2="220" y2="36" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <line x1="0" y1="54" x2="220" y2="54" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+            <path d="M0 70 C30 70 40 62 60 54 C80 46 90 38 110 30 C130 24 150 20 175 16 C195 13 210 12 220 11 L220 72 L0 72Z" fill="url(#gFill)"/>
+            <path d="M0 70 C30 70 40 62 60 54 C80 46 90 38 110 30 C130 24 150 20 175 16 C195 13 210 12 220 11" fill="none" stroke="#9B6FDF" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="220" cy="11" r="3" fill="#9B6FDF"/>
+          </svg>
+          <div class="graph-dates">
+            <span class="graph-date">May 1</span>
+            <span class="graph-date">May 12</span>
+            <span class="graph-date">May 21</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:24px"></div>
+    </div>
+
+  </div><!-- /screens-track -->
+
+  <!-- Overlay + Annotation sit above both screens -->
+  <div class="screen-overlay" id="overlay"></div>
+  <div class="annotation" id="annot"></div>
+
+</div>
+</div>
+
+<script>
+function scaleToFit(){
+  const s=Math.min(window.innerWidth/300,window.innerHeight/620)*0.92;
+  document.querySelector('.scale-root').style.transform=`scale(${s})`;
+}
+scaleToFit();
+window.addEventListener('resize',scaleToFit);
+
+const track   = document.getElementById('track');
+const overlay = document.getElementById('overlay');
+const annot   = document.getElementById('annot');
+const btn     = document.getElementById('insightsBtn');
+
+let onInsights = false;
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function goToInsights(){
+  onInsights=true;
+  btn.classList.add('tapped');
+  setTimeout(()=>btn.classList.remove('tapped'),200);
+  track.style.transform='translateX(-300px)';
+  document.getElementById('s2').scrollTop=0;
+}
+function goToPlayer(){
+  onInsights=false;
+  track.style.transform='translateX(0)';
+}
+
+function showAnnot(msg){
+  overlay.style.transition='background 0.4s ease';
+  overlay.style.background='rgba(0,0,0,0.68)';
+  annot.textContent=msg;
+  annot.style.transition='opacity 0.4s ease';
+  annot.style.opacity='1';
+}
+function hideAnnot(){
+  return new Promise(r=>{
+    overlay.style.background='rgba(0,0,0,0)';
+    annot.style.opacity='0';
+    setTimeout(r,460);
+  });
+}
+
+async function resetAll(){
+  overlay.style.transition='none';
+  annot.style.transition='none';
+  overlay.style.background='rgba(0,0,0,0)';
+  annot.style.opacity='0';
+  annot.textContent='';
+  track.style.transition='none';
+  goToPlayer();
+  document.getElementById('s2').scrollTop=0;
+  void overlay.offsetWidth;
+  track.style.transition='transform 0.52s cubic-bezier(0.4,0,0.2,1)';
+}
+
+async function runLoop(){
+  await resetAll();
+  await delay(1400);
+
+  // Annotation 1
+  showAnnot("I can now see who listened to my song — even if nobody liked or commented, it doesn't feel like I'm creating to a void.");
+  await delay(3000);
+  await hideAnnot();
+  await delay(400);
+
+  // Annotation 2
+  showAnnot("And if I'm more curious about how others reacted, I can see insights Suno generated for me.");
+  await delay(2800);
+  await hideAnnot();
+  await delay(400);
+
+  // Swipe to insights
+  goToInsights();
+  await delay(900);
+
+  // Annotation 3
+  showAnnot("Even if nobody reacted, seeing how people passively engaged with my music gives me encouragement.");
+  await delay(3000);
+  await hideAnnot();
+  await delay(400);
+
+  // Annotation 4
+  showAnnot("Over time, Suno should work with creators to better understand which additional insights would benefit them.");
+  await delay(3200);
+  await hideAnnot();
+
+  await delay(800);
+  runLoop();
+}
+
+setTimeout(runLoop,600);
+</script>
+</body>
+</html>
